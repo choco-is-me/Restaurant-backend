@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, make_response
 from flask_restful import Resource, Api
 
-app = Flask(__name__)
+app = Flask("SOA") # Changed the first parameter to the app directory
 api = Api(app)
 
 
@@ -55,5 +55,5 @@ api.add_resource(Serve, '/api/food/serve')
 api.add_resource(NewPayment, '/api/payment/new')
 api.add_resource(NewRating, '/api/rating/new')
 
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    app.run(port=8000, debug=True) # Changed the port to 8000
