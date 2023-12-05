@@ -1,43 +1,51 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify, make_response
 from flask_restful import Resource, Api
 
 app = Flask(__name__)
 api = Api(app)
 
+
 class NewTable(Resource):
     def post(self):
         # Assigns a new table when a new guest comes in the restaurant.
-        pass
+        return make_response(jsonify({"message": "New table assigned!"}), 200)
+
 
 class OrderFood(Resource):
     def post(self):
         # Displays the menu for the customer to order.
-        pass
+        return make_response(jsonify({"message": "Menu displayed!"}), 200)
+
 
 class Confirm(Resource):
     def post(self):
         # Confirms the food ordered in the menu.
-        pass
+        return make_response(jsonify({"message": "Order confirmed!"}), 200)
+
 
 class NewTicket(Resource):
     def post(self):
         # Generates a ticket when food is ordered and updates it to the kitchen.
-        pass
+        return make_response(jsonify({"message": "Ticket generated!"}), 200)
+
 
 class Serve(Resource):
     def post(self):
         # Confirms that the food has been served to the guest.
-        pass
+        return make_response(jsonify({"message": "Food served!"}), 200)
+
 
 class NewPayment(Resource):
     def post(self):
         # Generates a receipt based on the total price when the guest pays.
-        pass
+        return make_response(jsonify({"message": "Receipt generated!"}), 200)
+
 
 class NewRating(Resource):
     def post(self):
         # Records the rating from the guest for the restaurant.
-        pass
+        return make_response(jsonify({"message": "Rating recorded!"}), 200)
+
 
 api.add_resource(NewTable, '/api/tables/new')
 api.add_resource(OrderFood, '/api/food/order')
