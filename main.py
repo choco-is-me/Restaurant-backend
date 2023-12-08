@@ -1,16 +1,20 @@
 from flask import Flask, jsonify, make_response
 from flask_restful import Resource, Api
-from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import sessionmaker
-from sqlmodel import SQLModel
+import sqlite3
+
 
 app = Flask("SOA")
 api = Api(app)
-Base = declarative_base(metadata=SQLModel.metadata)
-engine = create_engine('sqlite:////Users/chocoisme/Desktop/main.sqbpro')
-Session = sessionmaker(bind=engine)
-session = Session()
+
+
+class TestDB(Resource):
+    def get(self):
+        try:
+            conn = sqlite3.connect('main.db')
+            conn.close()
+            return make_response(jsonify({"message": "Opened database successfully"}), 200)
+        except sqlite3.Error as e:
+            return make_response(jsonify({"message": f"An error occurred: {e.args[0]}"}), 500)
 
 
 class NewTable(Resource):
@@ -42,6 +46,7 @@ class NewRating(Resource):
         return make_response(jsonify({"message": "Rating recorded!"}), 200)
 
 
+api.add_resource(TestDB, '/api/testdb')
 api.add_resource(NewTable, '/api/tables/new')
 api.add_resource(OrderFood, '/api/food/order')
 api.add_resource(NewTicket, '/api/ticket/new')
