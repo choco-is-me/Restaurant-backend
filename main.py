@@ -1,4 +1,5 @@
 from datetime import datetime
+
 from flask import Flask, request, jsonify
 from flask_restful import Resource, Api
 from flask_sqlalchemy import SQLAlchemy
@@ -20,7 +21,7 @@ class Staff(db.Model):
     staffid = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     role = db.Column(db.String)
-    shift = db.Column(db.String)
+    shift = db.Column(db.Integer)
     specialty = db.Column(db.String)
 
 
@@ -28,9 +29,8 @@ class Menu(db.Model):
     __tablename__ = 'menu'
     itemid = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
-    price = db.Column(db.Float)
+    price = db.Column(db.Integer)
     instock = db.Column(db.Integer)
-    staffid = db.Column(db.Integer, db.ForeignKey('staff.staffid'))
 
 
 class Ingredients(db.Model):
@@ -38,7 +38,7 @@ class Ingredients(db.Model):
     ingredientid = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     amount = db.Column(db.Integer)
-    measurement = db.Column(db.String)
+    threshold = db.Column(db.Integer)
     itemid = db.Column(db.Integer, db.ForeignKey('menu.itemid'))
 
 
@@ -60,7 +60,7 @@ class Orders(db.Model):
     orderid = db.Column(db.Integer, primary_key=True)
     guestid = db.Column(db.Integer, db.ForeignKey('guest.guestid'))
     orderstatus = db.Column(db.Integer)
-    date = db.Column(db.String)
+    date = db.Column(db.Date)
 
 
 class OrderDetails(db.Model):
@@ -68,122 +68,153 @@ class OrderDetails(db.Model):
     orderid = db.Column(db.Integer, db.ForeignKey('orders.orderid'), primary_key=True)
     itemid = db.Column(db.Integer, db.ForeignKey('menu.itemid'), primary_key=True)
     quantity = db.Column(db.Integer)
-    totalamount = db.Column(db.Float)
+    totalamount = db.Column(db.Integer)
     staffid = db.Column(db.Integer, db.ForeignKey('staff.staffid'))
 
 
 class Payment(db.Model):
     __tablename__ = 'payment'
     paymentid = db.Column(db.Integer, primary_key=True)
-    totalamount = db.Column(db.Float)
+    totalamount = db.Column(db.Integer)
     orderid = db.Column(db.Integer, db.ForeignKey('orders.orderid'))
 
 
 # Define API resources
 class Login(Resource):
-    def post(self):
+    @staticmethod
+    def post():
         data = request.get_json()
         staff_id = data['staffID']
         staff = Staff.query.filter_by(staffid=staff_id).first()
         if staff:
-            return jsonify({'status': 'success'})
+            return jsonify({'status': 'success', 'name': staff.name, 'role': staff.role, 'shift': staff.shift})
         else:
             return jsonify({'status': 'failure'})
 
 
 class DisplayTables(Resource):
-    def get(self):
+    @staticmethod
+    def get():
         tables = DiningTable.query.all()
         output = []
         for table in tables:
-            output.append({'tableNo': table.tableno, 'tableStatus': table.tablestatus})
+            guest = Guest.query.filter_by(tableno=table.tableno).first()
+            guest_name = guest.name if guest else None
+            output.append({'tableNo': table.tableno, 'tableStatus': table.tablestatus, 'guestName': guest_name})
         return jsonify(output)
 
 
 class MakeTable(Resource):
-    def post(self):
+    @staticmethod
+    def post():
         data = request.get_json()
         table_no = data['tableNo']
         guest_name = data['guestName']
         table = DiningTable.query.filter_by(tableno=table_no).first()
         if not table:
             return jsonify({'status': 'failure'})
+
+        # Check if the table is already occupied
+        if table.tablestatus == 1:
+            return jsonify({'status': 'failure', 'message': 'Table is already occupied'})
+
         guest = Guest(name=guest_name, tableno=table_no)
         db.session.add(guest)
         table.tablestatus = 1
         db.session.commit()
-        return jsonify({'status': 'success', 'tableStatus': table.tablestatus, 'guestId': guest.guestid})
+        return jsonify({'status': 'success', 'tableStatus': table.tablestatus, 'guestName': guest.name})
 
 
 class RemoveTable(Resource):
-    def post(self):
+    @staticmethod
+    def post():
         data = request.get_json()
         table_no = data['tableNo']
         table = DiningTable.query.filter_by(tableno=table_no).first()
         if not table:
             return jsonify({'status': 'failure'})
-        if table.tablestatus == 0:
+        if table.tablestatus == 2:
             return jsonify({'status': 'failure'})
         guest = Guest.query.filter_by(tableno=table_no).first()
         if guest:
             db.session.delete(guest)
-        table.tablestatus = 0
+        table.tablestatus = 2
         db.session.commit()
         return jsonify({'status': 'success', 'tableNo': table_no})
 
 
 class DisplayMenu(Resource):
-    def get(self):
+    @staticmethod
+    def get():
         menu_items = Menu.query.all()
         output = []
         for item in menu_items:
-            staff = Staff.query.filter_by(staffid=item.staffid).first()
-            output.append({'itemID': item.itemid, 'name': item.name, 'price': item.price, 'inStock': item.instock,
-                           'staffID': staff.staffid})
+            output.append({'itemID': item.itemid, 'name': item.name, 'price': item.price, 'inStock': item.instock})
         return jsonify(output)
 
 
 class AddItemToOrder(Resource):
-    def post(self):
+    @staticmethod
+    def post():
         data = request.get_json()
-        order_id = data['orderId']
-        item_id = data['itemId']
-        quantity = data['quantity']
-        staff_id = data['staffId']
-        guest_id = data['guestId']
+        for item in data:
+            order_id = item['orderId']
+            item_id = item['itemId']
+            quantity = item['quantity']
+            staff_id = item['staffId']
+            guest_id = item['guestId']
 
-        item = Menu.query.filter_by(itemid=item_id).first()
-        if item.instock == 2:
-            return jsonify({'status': 'failure'})
+            item = Menu.query.filter_by(itemid=item_id).first()
+            ingredient_list = Ingredients.query.filter_by(itemid=item_id).all()
 
-        # Check if an order with the same ID already exists
-        existing_order = Orders.query.filter_by(orderid=order_id).first()
+            # Check if the item is available
+            if item.instock == 2:
+                return jsonify({'status': 'failure', 'message': 'Item is not available'})
 
-        if existing_order:
-            # If the order already exists, only add the item to the OrderDetails table
-            order_detail = OrderDetails(orderid=order_id, itemid=item_id,
-                                        quantity=quantity, totalamount=item.price * int(quantity), staffid=staff_id)
-            db.session.add(order_detail)
-            db.session.commit()
+            # Check if at least one of the ingredient amount is smaller than the threshold value
+            insufficient_ingredient = False
+            for ingredient in ingredient_list:
+                if (ingredient.amount < ingredient.threshold * int(quantity)
+                        and ingredient.threshold * int(quantity) > ingredient.amount):
+                    insufficient_ingredient = True
+                    break
 
-            return jsonify({'status': 'success', 'totalAmount': order_detail.totalamount})
-        else:
-            # If the order does not exist, add it to the Orders table and then add the item to the OrderDetails table
-            order = Orders(orderid=order_id, guestid=guest_id, orderstatus=0,
-                           date=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-            db.session.add(order)
-            db.session.commit()
+            if insufficient_ingredient:
+                return jsonify({'status': 'failure', 'message': 'One or more ingredients are insufficient'})
 
-            order_detail = OrderDetails(orderid=order_id, itemid=item_id,
-                                        quantity=quantity, totalamount=item.price * int(quantity), staffid=staff_id)
-            db.session.add(order_detail)
-            db.session.commit()
+            # Otherwise, decrease the ingredient amount by threshold value and check if it reaches below threshold value
+            else:
+                for ingredient in ingredient_list:
+                    if ingredient.amount < ingredient.threshold:
+                        return jsonify({'status': 'failure', 'message': 'One or more ingredients are insufficient'})
+                    else:
+                        ingredient.amount -= ingredient.threshold * int(quantity)
+            # Check if an order with the same ID already exists
+            existing_order = Orders.query.filter_by(orderid=order_id).first()
 
-            return jsonify({'status': 'success', 'totalAmount': order_detail.totalamount})
+            if existing_order:
+                order_detail = OrderDetails(orderid=order_id, itemid=item_id,
+                                            quantity=quantity, totalamount=item.price * int(quantity), staffid=staff_id)
+                db.session.add(order_detail)
+                db.session.commit()
+            else:
+                order = Orders(orderid=order_id, guestid=guest_id, orderstatus=0,
+                               date=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+                db.session.add(order)
+                db.session.commit()
+
+                order_detail = OrderDetails(orderid=order_id, itemid=item_id,
+                                            quantity=quantity, totalamount=item.price * int(quantity), staffid=staff_id)
+                db.session.add(order_detail)
+                db.session.commit()
+
+        db.session.commit()
+        return jsonify({'status': 'success'})
 
 
 class RemoveOrder(Resource):
-    def post(self):
+    @staticmethod
+    def post():
         data = request.get_json()
         order_id = data['orderId']
         order_details = OrderDetails.query.filter_by(orderid=order_id).all()
@@ -200,7 +231,8 @@ class RemoveOrder(Resource):
 
 
 class DisplayRecord(Resource):
-    def get(self):
+    @staticmethod
+    def get():
         orders = Orders.query.all()
         output = []
         for order in orders:
@@ -210,12 +242,14 @@ class DisplayRecord(Resource):
             payment = Payment.query.filter_by(orderid=order.orderid).first()
             output.append(
                 {'orderId': order.orderid, 'staffId': staff.staffid, 'shift': staff.shift,
-                 'totalAmount': payment.totalamount, 'date': order.date})
+                 'totalAmount': payment.totalamount, 'date': order.date.isoformat()}
+            )
         return jsonify(output)
 
 
 class DisplayOrderStatus(Resource):
-    def get(self):
+    @staticmethod
+    def get():
         orders = Orders.query.all()
         output = []
         for order in orders:
@@ -224,7 +258,8 @@ class DisplayOrderStatus(Resource):
 
 
 class SetOrderStatus(Resource):
-    def post(self):
+    @staticmethod
+    def post():
         data = request.get_json()
         order_id = data['orderID']
         new_status = data['newStatus']
@@ -237,7 +272,8 @@ class SetOrderStatus(Resource):
 
 
 class MakePayment(Resource):
-    def post(self):
+    @staticmethod
+    def post():
         data = request.get_json()
         order_id = data['orderID']
 
@@ -261,89 +297,95 @@ class MakePayment(Resource):
 
 
 class DisplayIngredients(Resource):
-    def get(self):
+    @staticmethod
+    def get():
         ingredients = Ingredients.query.all()
         output = []
         for ingredient in ingredients:
             output.append(
-                {'ingredientID': ingredient.ingredientid, 'name': ingredient.name, 'amount': ingredient.amount,
-                 'measurement': ingredient.measurement})
+                {'ingredientID': ingredient.ingredientid, 'name': ingredient.name,
+                 'threshold': ingredient.threshold, 'amount': ingredient.amount})
         return jsonify(output)
 
 
 class AddIngredient(Resource):
-    def post(self):
+    @staticmethod
+    def post():
         data = request.get_json()
-        name = data['name']
+        ingredient_name = data['ingredientName']
         amount = data['amount']
-        measurement = data['measurement']
+        threshold = data['threshold']
         item_id = data['itemID']
 
         # Check if an ingredient with the same name and item ID already exists
-        existing_ingredient = Ingredients.query.filter_by(name=name, itemid=item_id).first()
-
-        # If an existing ingredient is found, return an error
+        existing_ingredient = Ingredients.query.filter_by(name=ingredient_name, itemid=item_id).first()
         if existing_ingredient:
             return jsonify({'status': 'failure', 'message': 'Ingredient already exists'})
 
-        # Otherwise, create a new ingredient with the next available ID
-        new_ingredient_id = db.session.query(db.func.max(Ingredients.ingredientid)).scalar() + 1
-        ingredient = Ingredients(ingredientid=new_ingredient_id, name=name, amount=amount, measurement=measurement,
-                                 itemid=item_id)
+        # Get the largest ingredient ID and increment it by 1 to generate a new ID
+        max_ingredient_id = db.session.query(db.func.max(Ingredients.ingredientid)).first()[0]
+        new_ingredient_id = max_ingredient_id + 1
+
+        # Create a new ingredient with the generated ID
+        ingredient = Ingredients(ingredientid=new_ingredient_id, name=ingredient_name,
+                                 amount=amount, threshold=threshold, itemid=item_id)
         db.session.add(ingredient)
         db.session.commit()
 
-        # Update the instock variable in the Menu table
-        menu_item = Menu.query.filter_by(itemid=item_id).first()
-        if menu_item:
-            menu_item.instock = 1
-            db.session.commit()
-
-        return jsonify({'status': 'success', 'ingredientID': ingredient.ingredientid})
+        return jsonify({'status': 'success', 'ingredientID': new_ingredient_id})
 
 
 class EditIngredient(Resource):
-    def post(self):
+    @staticmethod
+    def post():
         data = request.get_json()
         ingredient_id = data['ingredientID']
         new_name = data['newName']
         new_amount = data['newAmount']
-        new_measurement = data['newMeasurement']
+        new_threshold = data['newThreshold']
+
         ingredient = Ingredients.query.filter_by(ingredientid=ingredient_id).first()
+        item_id = ingredient.itemid
+
+        # Check if an ingredient with the same name and item ID already exists
+        existing_ingredient = Ingredients.query.filter_by(name=new_name, itemid=item_id).first()
+        if existing_ingredient:
+            return jsonify({'status': 'failure', 'message': 'Ingredient already exists'})
+
         if not ingredient:
             return jsonify({'status': 'failure'})
+        if int(new_amount) < 0 or int(new_threshold) < 0:
+            return jsonify({'status': 'failure', 'message': 'Amount and threshold must be non-negative'})
+
         ingredient.name = new_name
         ingredient.amount = new_amount
-        ingredient.measurement = new_measurement
+        ingredient.threshold = new_threshold
         db.session.commit()
 
-        # Update the instock variable in the Menu table
-        menu_item = Menu.query.filter_by(itemid=ingredient.itemid).first()
-        if menu_item:
-            if ingredient.amount == 0:
-                menu_item.instock = 2
-            else:
-                menu_item.instock = 1
+        # Check if the amount is smaller than the threshold value
+        if ingredient.amount < ingredient.threshold:
+            item = Menu.query.filter_by(itemid=ingredient.itemid).first()
+            item.instock = 2
             db.session.commit()
 
         return jsonify({'status': 'success'})
 
 
 class RemoveIngredient(Resource):
-    def post(self):
+    @staticmethod
+    def post():
         data = request.get_json()
         ingredient_id = data['ingredientID']
         ingredient = Ingredients.query.filter_by(ingredientid=ingredient_id).first()
         if not ingredient:
             return jsonify({'status': 'failure'})
         db.session.delete(ingredient)
-        db.session.commit()
 
-        # Update the instock variable in the Menu table
-        menu_item = Menu.query.filter_by(itemid=ingredient.itemid).first()
-        if menu_item:
-            menu_item.instock = 2
-            db.session.commit()
+        # Re-arrange ingredient IDs
+        ingredients = Ingredients.query.filter(Ingredients.ingredientid > ingredient_id).all()
+        for ingredient in ingredients:
+            ingredient.ingredientid -= 1
+        db.session.commit()
 
         return jsonify({'status': 'success'})
 
