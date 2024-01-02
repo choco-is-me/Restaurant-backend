@@ -1,16 +1,10 @@
 from datetime import datetime
-
 from flask import Flask, request, jsonify
 from flask_restful import Resource, Api
 from flask_sqlalchemy import SQLAlchemy
 
-# Initialize Flask app
 app = Flask(__name__)
-
-# Initialize API
 api = Api(app)
-
-# Configure SQLAlchemy
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://chocoisme:choco123@localhost/chocoisme'
 db = SQLAlchemy(app)
 
@@ -162,7 +156,13 @@ class AddItemToOrder(Resource):
             item_id = item['itemId']
             quantity = item['quantity']
             staff_id = item['staffId']
-            guest_id = item['guestId']
+            table_no = item['tableNo']  # Retrieve table number from request data
+
+            # Get the guest ID associated with the table number
+            guest = Guest.query.filter_by(tableno=table_no).first()
+            if not guest:
+                return jsonify({'status': 'failure', 'message': 'Guest not found for table'})
+            guest_id = guest.guestid
 
             item = Menu.query.filter_by(itemid=item_id).first()
             ingredient_list = Ingredients.query.filter_by(itemid=item_id).all()
@@ -211,6 +211,34 @@ class AddItemToOrder(Resource):
         return jsonify({'status': 'success'})
 
 
+class ViewCart(Resource):
+    @staticmethod
+    def get(order_id):
+
+        try:
+            order_details = OrderDetails.query.filter_by(orderid=order_id).all()
+
+            if not order_details:
+                return jsonify({'status': 'failure', 'message': 'Order not found'})
+
+            output = []
+            total_amount = 0
+            for order_detail in order_details:
+                item = Menu.query.filter_by(itemid=order_detail.itemid).first()
+                output.append({
+                    'itemID': item.itemid,
+                    'name': item.name,
+                    'quantity': order_detail.quantity,
+                    'totalAmount': order_detail.totalamount
+                })
+                total_amount += order_detail.totalamount
+
+            return jsonify({'status': 'success', 'items': output, 'totalAmount': total_amount})
+
+        except Exception as e:
+            return jsonify({'status': 'failure', 'message': str(e)})
+
+
 class RemoveOrder(Resource):
     @staticmethod
     def post():
@@ -220,12 +248,15 @@ class RemoveOrder(Resource):
         payment = Payment.query.filter_by(orderid=order_id).first()
         if payment:
             db.session.delete(payment)
+            db.session.commit()
         for order_detail in order_details:
             db.session.delete(order_detail)
+            db.session.commit()
         order = Orders.query.filter_by(orderid=order_id).first()
         if order:
             db.session.delete(order)
-        db.session.commit()
+            db.session.commit()
+
         return jsonify({'status': 'success'})
 
 
@@ -384,13 +415,23 @@ class RemoveIngredient(Resource):
         return jsonify({'status': 'success'})
 
 
-# Add resources to API
+class ResetIngredientAmounts(Resource):
+    @staticmethod
+    def post():
+        ingredients = Ingredients.query.all()
+        for ingredient in ingredients:
+            ingredient.amount = 20
+        db.session.commit()
+        return jsonify({'status': 'success'})
+
+
 api.add_resource(Login, '/login')  # All
 api.add_resource(DisplayTables, '/display_tables')  # Waiter, Manager
 api.add_resource(MakeTable, '/make_table')  # Waiter, Manager
 api.add_resource(RemoveTable, '/remove_table')  # Waiter, Manager
 api.add_resource(DisplayMenu, '/display_menu')  # Waiter, Manager
 api.add_resource(AddItemToOrder, '/add_item_to_order')  # Waiter, Manager
+api.add_resource(ViewCart, '/view_cart/<int:order_id>')  # Waiter, Manager
 api.add_resource(RemoveOrder, '/remove_order')  # Waiter, Manager
 api.add_resource(DisplayRecord, '/display_record')  # Manager
 api.add_resource(DisplayOrderStatus, '/display_order_status')  # All
@@ -400,7 +441,7 @@ api.add_resource(DisplayIngredients, '/display_ingredients')  # Cook
 api.add_resource(EditIngredient, '/edit_ingredient')  # Cook
 api.add_resource(AddIngredient, '/add_ingredient')  # Cook
 api.add_resource(RemoveIngredient, '/remove_ingredient')  # Cook
+api.add_resource(ResetIngredientAmounts, '/reset_ingredient_amounts')  # Cook
 
-# Run the app
 if __name__ == '__main__':
     app.run(debug=True, port=8000)
