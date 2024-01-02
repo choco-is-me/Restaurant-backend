@@ -108,7 +108,6 @@ class MakeTable(Resource):
         if not table:
             return jsonify({'status': 'failure'})
 
-        # Check if the table is already occupied
         if table.tablestatus == 1:
             return jsonify({'status': 'failure', 'message': 'Table is already occupied'})
 
@@ -156,9 +155,8 @@ class AddItemToOrder(Resource):
             item_id = item['itemId']
             quantity = item['quantity']
             staff_id = item['staffId']
-            table_no = item['tableNo']  # Retrieve table number from request data
+            table_no = item['tableNo']
 
-            # Get the guest ID associated with the table number
             guest = Guest.query.filter_by(tableno=table_no).first()
             if not guest:
                 return jsonify({'status': 'failure', 'message': 'Guest not found for table'})
@@ -167,11 +165,9 @@ class AddItemToOrder(Resource):
             item = Menu.query.filter_by(itemid=item_id).first()
             ingredient_list = Ingredients.query.filter_by(itemid=item_id).all()
 
-            # Check if the item is available
             if item.instock == 2:
                 return jsonify({'status': 'failure', 'message': 'Item is not available'})
 
-            # Check if at least one of the ingredient amount is smaller than the threshold value
             insufficient_ingredient = False
             for ingredient in ingredient_list:
                 if (ingredient.amount < ingredient.threshold * int(quantity)
@@ -306,18 +302,15 @@ class MakePayment(Resource):
         data = request.get_json()
         order_id = data['orderID']
 
-        # Check if the order is served (orderstatus = 3)
         order = Orders.query.filter_by(orderid=order_id).first()
         if not order or order.orderstatus != 3:
             return jsonify({'status': 'failure', 'message': 'Order is not served yet'})
 
-        # Calculate the total amount to be paid
         total_amount = 0
         order_details = OrderDetails.query.filter_by(orderid=order_id).all()
         for order_detail in order_details:
             total_amount += order_detail.totalamount
 
-        # Create a new payment record
         payment = Payment(totalamount=total_amount, orderid=order_id)
         db.session.add(payment)
         db.session.commit()
@@ -373,7 +366,6 @@ class EditIngredient(Resource):
         ingredient = Ingredients.query.filter_by(ingredientid=ingredient_id).first()
         item_id = ingredient.itemid
 
-        # Check if an ingredient with the same name and item ID already exists
         existing_ingredient = Ingredients.query.filter_by(name=new_name, itemid=item_id).first()
         if existing_ingredient:
             return jsonify({'status': 'failure', 'message': 'Ingredient already exists'})
