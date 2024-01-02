@@ -182,14 +182,13 @@ class AddItemToOrder(Resource):
             if insufficient_ingredient:
                 return jsonify({'status': 'failure', 'message': 'One or more ingredients are insufficient'})
 
-            # Otherwise, decrease the ingredient amount by threshold value and check if it reaches below threshold value
             else:
                 for ingredient in ingredient_list:
                     if ingredient.amount < ingredient.threshold:
                         return jsonify({'status': 'failure', 'message': 'One or more ingredients are insufficient'})
                     else:
                         ingredient.amount -= ingredient.threshold * int(quantity)
-            # Check if an order with the same ID already exists
+
             existing_order = Orders.query.filter_by(orderid=order_id).first()
 
             if existing_order:
@@ -236,7 +235,6 @@ class DisplayRecord(Resource):
         orders = Orders.query.all()
         output = []
         for order in orders:
-            # Retrieve the staff ID from OrderDetails based on order ID
             order_detail = OrderDetails.query.filter_by(orderid=order.orderid).first()
             staff = Staff.query.filter_by(staffid=order_detail.staffid).first()
             payment = Payment.query.filter_by(orderid=order.orderid).first()
@@ -317,16 +315,13 @@ class AddIngredient(Resource):
         threshold = data['threshold']
         item_id = data['itemID']
 
-        # Check if an ingredient with the same name and item ID already exists
         existing_ingredient = Ingredients.query.filter_by(name=ingredient_name, itemid=item_id).first()
         if existing_ingredient:
             return jsonify({'status': 'failure', 'message': 'Ingredient already exists'})
 
-        # Get the largest ingredient ID and increment it by 1 to generate a new ID
         max_ingredient_id = db.session.query(db.func.max(Ingredients.ingredientid)).first()[0]
         new_ingredient_id = max_ingredient_id + 1
 
-        # Create a new ingredient with the generated ID
         ingredient = Ingredients(ingredientid=new_ingredient_id, name=ingredient_name,
                                  amount=amount, threshold=threshold, itemid=item_id)
         db.session.add(ingredient)
@@ -362,7 +357,6 @@ class EditIngredient(Resource):
         ingredient.threshold = new_threshold
         db.session.commit()
 
-        # Check if the amount is smaller than the threshold value
         if ingredient.amount < ingredient.threshold:
             item = Menu.query.filter_by(itemid=ingredient.itemid).first()
             item.instock = 2
