@@ -207,34 +207,6 @@ class AddItemToOrder(Resource):
         return jsonify({'status': 'success'})
 
 
-class ViewCart(Resource):
-    @staticmethod
-    def get(order_id):
-
-        try:
-            order_details = OrderDetails.query.filter_by(orderid=order_id).all()
-
-            if not order_details:
-                return jsonify({'status': 'failure', 'message': 'Order not found'})
-
-            output = []
-            total_amount = 0
-            for order_detail in order_details:
-                item = Menu.query.filter_by(itemid=order_detail.itemid).first()
-                output.append({
-                    'itemID': item.itemid,
-                    'name': item.name,
-                    'quantity': order_detail.quantity,
-                    'totalAmount': order_detail.totalamount
-                })
-                total_amount += order_detail.totalamount
-
-            return jsonify({'status': 'success', 'items': output, 'totalAmount': total_amount})
-
-        except Exception as e:
-            return jsonify({'status': 'failure', 'message': str(e)})
-
-
 class RemoveOrder(Resource):
     @staticmethod
     def post():
@@ -423,7 +395,6 @@ api.add_resource(MakeTable, '/make_table')  # Waiter, Manager
 api.add_resource(RemoveTable, '/remove_table')  # Waiter, Manager
 api.add_resource(DisplayMenu, '/display_menu')  # Waiter, Manager
 api.add_resource(AddItemToOrder, '/add_item_to_order')  # Waiter, Manager
-api.add_resource(ViewCart, '/view_cart/<int:order_id>')  # Waiter, Manager
 api.add_resource(RemoveOrder, '/remove_order')  # Waiter, Manager
 api.add_resource(DisplayRecord, '/display_record')  # Manager
 api.add_resource(DisplayOrderStatus, '/display_order_status')  # All
