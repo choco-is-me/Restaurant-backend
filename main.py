@@ -2,11 +2,13 @@ from datetime import datetime
 from flask import Flask, request, jsonify
 from flask_restful import Resource, Api
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS, cross_origin
 
 app = Flask(__name__)
 api = Api(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://chocoisme:choco123@localhost/chocoisme'
 db = SQLAlchemy(app)
+CORS(app)
 
 
 # Define models
@@ -25,6 +27,7 @@ class Menu(db.Model):
     name = db.Column(db.String)
     price = db.Column(db.Integer)
     instock = db.Column(db.Integer)
+    imagelink = db.Column(db.String)
 
 
 class Ingredients(db.Model):
@@ -74,6 +77,50 @@ class Payment(db.Model):
 
 
 # Define API resources
+
+class SignUp(Resource):
+    @staticmethod
+    def post():
+        data = request.get_json()
+        name = data['name']
+        role = data['role']
+        shift = data['shift']
+        specialty = data['specialty']
+
+        max_staff_id = db.session.query(db.func.max(Staff.staffid)).first()[0]
+        new_staff_id = max_staff_id + 1
+
+        staff = Staff(staffid=new_staff_id, name=name, role=role, shift=shift, specialty=specialty)
+        db.session.add(staff)
+        db.session.commit()
+
+        return jsonify({'status': 'success', 'staffID': new_staff_id})
+
+
+class GetStaffList(Resource):
+    @staticmethod
+    def get():
+        staffs = Staff.query.all()
+        output = []
+        for staff in staffs:
+            output.append({'staffId': staff.staffid, 'name': staff.name, 'role': staff.role,
+                           'shift': staff.shift, 'specialty': staff.specialty})
+        return jsonify(output)
+
+
+class RemoveStaff(Resource):
+    @staticmethod
+    def post():
+        data = request.get_json()
+        staff_id = data['staffID']
+        staff = Staff.query.filter_by(staffid=staff_id).first()
+        if not staff:
+            return jsonify({'status': 'failure'})
+        db.session.delete(staff)
+        db.session.commit()
+        return jsonify({'status': 'success'})
+
+
 class Login(Resource):
     @staticmethod
     def post():
@@ -81,9 +128,12 @@ class Login(Resource):
         staff_id = data['staffID']
         staff = Staff.query.filter_by(staffid=staff_id).first()
         if staff:
-            return jsonify({'status': 'success', 'name': staff.name, 'role': staff.role, 'shift': staff.shift})
+            response = jsonify({'status': 'success', 'name': staff.name, 'role': staff.role, 'shift': staff.shift})
         else:
-            return jsonify({'status': 'failure'})
+            response = jsonify({'status': 'failure'})
+
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
 
 
 class DisplayTables(Resource):
@@ -142,7 +192,8 @@ class DisplayMenu(Resource):
         menu_items = Menu.query.all()
         output = []
         for item in menu_items:
-            output.append({'itemID': item.itemid, 'name': item.name, 'price': item.price, 'inStock': item.instock})
+            output.append({'itemID': item.itemid, 'name': item.name, 'price': item.price,
+                           'inStock': item.instock, 'imagelink': item.imagelink})
         return jsonify(output)
 
 
@@ -389,6 +440,9 @@ class ResetIngredientAmounts(Resource):
         return jsonify({'status': 'success'})
 
 
+api.add_resource(SignUp, '/signup')  # Admin
+api.add_resource(GetStaffList, '/staff_list')  # Admin
+api.add_resource(RemoveStaff, '/remove_staff')  # Admin
 api.add_resource(Login, '/login')  # All
 api.add_resource(DisplayTables, '/display_tables')  # Waiter, Manager
 api.add_resource(MakeTable, '/make_table')  # Waiter, Manager
