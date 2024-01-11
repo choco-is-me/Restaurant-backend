@@ -1,429 +1,157 @@
-## Introduction
-
-This document provides a comprehensive description of the API endpoints for the Flask application. The application is designed to manage various aspects of a restaurant, including staff login, table management, menu display, order management, payment processing, ingredient management, and reporting. The API endpoints are designed to be user-friendly and intuitive, enabling front-end developers to easily integrate them into the application's user interface.
-
-## API Endpoints
-
-### 1. Login
-
-**Endpoint:** `/login`
-
-**Method:** POST
-
-**Request Body:**
-
-```
-{
-  "staffID": "<staff_id>"
-}
-```
-
-**Response:**
-
-```
-{
-  "status": "success",
-  "name": "<staff_name>",
-  "role": "<staff_role>",
-  "shift": "<staff_shift>"
-}
-```
-
-**Description:**
-
-This endpoint allows staff members to log in to the system using their staff ID. Upon successful login, the endpoint returns the staff member's name, role, and shift.
-
-### 2. Display Tables
-
-**Endpoint:** `/display_tables`
-
-**Method:** GET
-
-**Response:**
-
-```
-[
-  {
-    "tableNo": "<table_number>",
-    "tableStatus": "<table_status>",
-    "guestName": "<guest_name>"
-  },
-  ...
-]
-```
-
-**Description:**
-
-This endpoint retrieves the status of all tables in the restaurant. It provides information about the table number, table status (occupied or vacant), and the name of the guest currently seated at the table, if any.
-
-### 3. Make Table
-
-**Endpoint:** `/make_table`
-
-**Method:** POST
-
-**Request Body:**
-
-```
-{
-  "tableNo": "<table_number>",
-  "guestName": "<guest_name>"
-}
-```
-
-**Response:**
-
-```
-{
-  "status": "success",
-  "tableStatus": "<table_status>",
-  "guestName": "<guest_name>"
-}
-```
-
-**Description:**
-
-This endpoint allows staff members to create a new table reservation. It updates the table status to occupied and associates the table with the specified guest name.
-
-### 4. Remove Table
-
-**Endpoint:** `/remove_table`
-
-**Method:** POST
-
-**Request Body:**
-
-```
-{
-  "tableNo": "<table_number>"
-}
-```
-
-**Response:**
-
-```
-{
-  "status": "success",
-  "tableNo": "<table_number>"
-}
-```
-
-**Description:**
-
-This endpoint allows staff members to remove a table reservation. It updates the table status to vacant and disassociates the guest from the table.
-
-### 5. Display Menu
-
-**Endpoint:** `/display_menu`
-
-**Method:** GET
-
-**Response:**
-
-```
-[
-  {
-    "itemID": "<item_id>",
-    "name": "<item_name>",
-    "price": "<item_price>",
-    "inStock": "<item_stock_status>"
-  },
-  ...
-]
-```
-
-**Description:**
-
-This endpoint retrieves the menu items available in the restaurant. It provides information about the item ID, item name, item price, and the stock status of the item (in stock or out of stock).
-
-### 6. Add Item to Order
-
-**Endpoint:** `/add_item_to_order`
-
-**Method:** POST
-
-**Request Body:**
-
-```
-[
-  {
-    "orderId": "<order_id>",
-    "itemId": "<item_id>",
-    "quantity": "<quantity>",
-    "staffId": "<staff_id>",
-    "tableNo": "<table_number>"
-  },
-  ...
-]
-```
-
-**Response:**
-
-```
-{
-  "status": "success"
-}
-```
-
-**Description:**
-
-This endpoint allows staff members to add items to an existing order. It requires the order ID, item ID, quantity, staff ID, and table number. Upon successful addition, the endpoint returns a success status.
-
-### 7. Remove Order
-
-**Endpoint:** `/remove_order`
-
-**Method:** POST
-
-**Request Body:**
-
-```
-{
-  "orderId": "<order_id>"
-}
-```
-
-**Response:**
-
-```
-{
-  "status": "success"
-}
-```
-
-**Description:**
-
-This endpoint allows staff members to remove an existing order. It requires the order ID. Upon successful removal, the endpoint returns a success status.
-
-### 8. Display Record
-
-**Endpoint:** `/display_record`
-
-**Method:** GET
-
-**Response:**
-
-```
-[
-  {
-    "orderId": "<order_id>",
-    "staffId": "<staff_id>",
-    "shift": "<staff_shift>",
-    "totalAmount": "<total_amount>",
-    "date": "<order_date>"
-  },
-  ...
-]
-```
-
-**Description:**
-
-This endpoint retrieves a record of all orders placed in the restaurant. It provides information about the order ID, staff ID, staff shift, total amount of the order, and the date when the order was placed.
-
-### 9. Display Order Status
-
-**Endpoint:** `/display_order_status`
-
-**Method:** GET
-
-**Response:**
-
-```
-[
-  {
-    "orderId": "<order_id>",
-    "orderStatus": "<order_status>"
-  },
-  ...
-]
-```
-
-**Description:**
-
-This endpoint retrieves the status of all orders placed in the restaurant. It provides information about the order ID and the current status of the order.
-
-### 10. Set Order Status
-
-**Endpoint:** `/set_order_status`
-
-**Method:** POST
-
-**Request Body:**
-
-```
-{
-  "orderId": "<order_id>",
-  "newStatus": "<new_status>"
-}
-```
-
-**Response:**
-
-```
-{
-  "status": "success"
-}
-```
-
-**Description:**
-
-This endpoint allows staff members to update the status of an existing order. It requires the order ID and the new status to be set. Upon successful update, the endpoint returns a success status.
-
-### 11. Make Payment
-
-**Endpoint:** `/payment`
-
-**Method:** POST
-
-**Request Body:**
-
-```
-{
-  "orderId": "<order_id>"
-}
-```
-
-**Response:**
-
-```
-{
-  "status": "success",
-  "paymentID": "<payment_id>",
-  "totalAmount": "<total_amount>"
-}
-```
-
-**Description:**
-
-This endpoint allows staff members to process payments for orders. It requires the order ID. Upon successful payment, the endpoint returns a success status, the payment ID, and the total amount paid.
-
-### 12. Display Ingredients
-
-**Endpoint:** `/display_ingredients`
-
-**Method:** GET
-
-**Response:**
-
-```
-[
-  {
-    "ingredientID": "<ingredient_id>",
-    "name": "<ingredient_name>",
-    "threshold": "<ingredient_threshold>",
-    "amount": "<ingredient_amount>"
-  },
-  ...
-]
-```
-
-**Description:**
-
-This endpoint retrieves a list of all ingredients used in the restaurant. It provides information about the ingredient ID, ingredient name, ingredient threshold, and the current amount of the ingredient in stock.
-
-### 13. Add Ingredient
-
-**Endpoint:** `/add_ingredient`
-
-**Method:** POST
-
-**Request Body:**
-
-```
-{
-  "ingredientName": "<ingredient_name>",
-  "amount": "<ingredient_amount>",
-  "threshold": "<ingredient_threshold>",
-  "itemID": "<item_id>"
-}
-```
-
-**Response:**
-
-```
-{
-  "status": "success",
-  "ingredientID": "<ingredient_id>"
-}
-```
-
-**Description:**
-
-This endpoint allows cooks to add new ingredients to the inventory. It requires the ingredient name, initial quantity, threshold quantity, and the item ID associated with the ingredient. Upon successful addition, the endpoint returns a success status and the newly created ingredient ID.
-
-### 14. Edit Ingredient
-
-**Endpoint:** `/edit_ingredient`
-
-**Method:** POST
-
-**Request Body:**
-
-```
-{
-  "ingredientID": "<ingredient_id>",
-  "newName": "<new_ingredient_name>",
-  "newAmount": "<new_ingredient_amount>",
-  "newThreshold": "<new_ingredient_threshold>"
-}
-```
-
-**Response:**
-
-```
-{
-  "status": "success"
-}
-```
-
-**Description:**
-
-This endpoint allows cooks to edit the details of an existing ingredient. It requires the ingredient ID, the new ingredient name, the new quantity, and the new threshold quantity. Upon successful update, the endpoint returns a success status.
-
-### 15. Remove Ingredient
-
-**Endpoint:** `/remove_ingredient`
-
-**Method:** POST
-
-**Request Body:**
-
-```
-{
-  "ingredientID": "<ingredient_id>"
-}
-```
-
-**Response:**
-
-```
-{
-  "status": "success"
-}
-```
-
-**Description:**
-
-This endpoint allows cooks to remove an existing ingredient from the inventory. It requires the ingredient ID. Upon successful removal, the endpoint returns a success status.
-
-### 16. Reset Ingredient Amounts
-
-**Endpoint:** `/reset_ingredient_amounts`
-
-**Method:** POST
-
-**Response:**
-
-```
-{
-  "status": "success"
-}
-```
-
-**Description:**
-
-This endpoint allows cooks to reset the quantity of all ingredients in the inventory to 20 units. Upon successful reset, the endpoint returns a success status.
-
-## Conclusion
-
-This API documentation provides a comprehensive overview of the endpoints available in the Flask application. It enables front-end developers to understand the functionality of each endpoint, the required request body format, and the expected response format. By utilizing this documentation, front-end developers can seamlessly integrate these endpoints into the user interface, creating a user-friendly and efficient restaurant management system.
+**Base URL:** http://localhost:8000
+
+**Authentication:**
+
+* All endpoints require authentication except for `/login` and `/display_menu`.
+* To authenticate, send a POST request to `/login` with the staff ID in the request body.
+* The response will contain a JSON object with a `token` field.
+* Include the `token` in the `Authorization` header of all subsequent requests.
+
+**Endpoints:**
+
+* **`/signup`**
+    * **Method:** POST
+    * **Access:** Admin
+    * **Request Body:**
+        * `name`: The name of the staff member.
+        * `role`: The role of the staff member (e.g., "waiter", "manager", "cook").
+        * `shift`: The shift of the staff member (e.g., "morning", "afternoon", "evening").
+        * `specialty` (optional): The specialty of the staff member (e.g., "Italian", "French", "Chinese").
+    * **Response:**
+        * `status`: "success" or "failure"
+        * `staffID`: The ID of the newly created staff member (if successful).
+* **`/staff_list`**
+    * **Method:** GET
+    * **Access:** Admin
+    * **Response:**
+        * A list of all staff members in the system, including their ID, name, role, shift, and specialty.
+* **`/remove_staff`**
+    * **Method:** POST
+    * **Access:** Admin
+    * **Request Body:**
+        * `staffID`: The ID of the staff member to be removed.
+    * **Response:**
+        * `status`: "success" or "failure"
+* **`/login`**
+    * **Method:** POST
+    * **Access:** All
+    * **Request Body:**
+        * `staffID`: The ID of the staff member.
+    * **Response:**
+        * `status`: "success" or "failure"
+        * `name`: The name of the staff member (if successful).
+        * `role`: The role of the staff member (if successful).
+        * `shift`: The shift of the staff member (if successful).
+        * `token`: The authentication token (if successful).
+* **`/display_tables`**
+    * **Method:** GET
+    * **Access:** Waiter, Manager
+    * **Response:**
+        * A list of all dining tables in the system, including their number, status (0 for empty, 1 for occupied, 2 for reserved), and the name of the guest (if occupied).
+* **`/make_table`**
+    * **Method:** POST
+    * **Access:** Waiter, Manager
+    * **Request Body:**
+        * `tableNo`: The number of the table to be reserved.
+        * `guestName`: The name of the guest.
+    * **Response:**
+        * `status`: "success" or "failure"
+        * `tableStatus`: The new status of the table (1 for occupied).
+        * `guestName`: The name of the guest.
+* **`/remove_table`**
+    * **Method:** POST
+    * **Access:** Waiter, Manager
+    * **Request Body:**
+        * `tableNo`: The number of the table to be removed.
+    * **Response:**
+        * `status`: "success" or "failure"
+        * `tableNo`: The number of the table that was removed.
+* **`/display_menu`**
+    * **Method:** GET
+    * **Access:** All
+    * **Response:**
+        * A list of all menu items in the system, including their ID, name, price, stock status (0 for out of stock, 1 for in stock, 2 for low stock), and image link.
+* **`/add_item_to_order`**
+    * **Method:** POST
+    * **Access:** Waiter, Manager
+    * **Request Body:**
+        * A JSON array of order items, each with the following fields:
+            * `orderId`: The ID of the order.
+            * `itemId`: The ID of the menu item.
+            * `quantity`: The quantity of the menu item to be ordered.
+            * `staffId`: The ID of the staff member who is taking the order.
+            * `tableNo`: The number of the table where the order is being placed.
+    * **Response:**
+        * `status`: "success" or "failure"
+* **`/remove_order`**
+    * **Method:** POST
+    * **Access:** Waiter, Manager
+    * **Request Body:**
+        * `orderId`: The ID of the order to be removed.
+    * **Response:**
+        * `status`: "success" or "failure"
+* **`/display_record`**
+    * **Method:** GET
+    * **Access:** Manager
+    * **Response:**
+        * A list of all orders in the system, including their ID, the ID of the staff member who took the order, the shift of the staff member, the total amount of the order, and the date the order was placed.
+* **`/display_order_status`**
+    * **Method:** GET
+    * **Access:** All
+    * **Response:**
+        * A list of all orders in the system, including their ID and status (0 for not served, 1 for served, 2 for paid, 3 for completed).
+* **`/set_order_status`**
+    * **Method:** POST
+    * **Access:** All
+    * **Request Body:**
+        * `orderID`: The ID of the order.
+        * `newStatus`: The new status of the order (0 for not served, 1 for served, 2 for paid, 3 for completed).
+    * **Response:**
+        * `status`: "success" or "failure"
+* **`/payment`**
+    * **Method:** POST
+    * **Access:** Waiter, Manager
+    * **Request Body:**
+        * `orderID`: The ID of the order.
+    * **Response:**
+        * `status`: "success" or "failure"
+        * `paymentID`: The ID of the payment (if successful).
+        * `totalamount`: The total amount of the payment (if successful).
+* **`/display_ingredients`**
+    * **Method:** GET
+    * **Access:** Cook
+    * **Response:**
+        * A list of all ingredients in the system, including their ID, name, threshold, and amount.
+* **`/edit_ingredient`**
+    * **Method:** POST
+    * **Access:** Cook
+    * **Request Body:**
+        * `ingredientID`: The ID of the ingredient to be edited.
+        * `newName`: The new name of the ingredient.
+        * `newAmount`: The new amount of the ingredient.
+        * `newThreshold`: The new threshold of the ingredient.
+    * **Response:**
+        * `status`: "success" or "failure"
+* **`/add_ingredient`**
+    * **Method:** POST
+    * **Access:** Cook
+    * **Request Body:**
+        * `ingredientName`: The name of the ingredient.
+        * `amount`: The amount of the ingredient.
+        * `threshold`: The threshold of the ingredient.
+        * `itemID`: The ID of the menu item that the ingredient belongs to.
+    * **Response:**
+        * `status`: "success" or "failure"
+        * `ingredientID`: The ID of the newly created ingredient (if successful).
+* **`/remove_ingredient`**
+    * **Method:** POST
+    * **Access:** Cook
+    * **Request Body:**
+        * `ingredientID`: The ID of the ingredient to be removed.
+    * **Response:**
+        * `status`: "success" or "failure"
+* **`/reset_ingredient_amounts`**
+    * **Method:** POST
+    * **Access:** Cook
+    * **Response:**
+        * `status`: "success"
