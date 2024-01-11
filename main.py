@@ -108,6 +108,29 @@ class GetStaffList(Resource):
         return jsonify(output)
 
 
+class EditStaff(Resource):
+    @staticmethod
+    def post():
+        data = request.get_json()
+        staff_id = data['staffID']
+        new_name = data['newName']
+        new_role = data['newRole']
+        new_shift = data['newShift']
+        new_specialty = data['newSpecialty']
+
+        staff = Staff.query.filter_by(staffid=staff_id).first()
+        if not staff:
+            return jsonify({'status': 'failure'})
+
+        staff.name = new_name
+        staff.role = new_role
+        staff.shift = new_shift
+        staff.specialty = new_specialty
+        db.session.commit()
+
+        return jsonify({'status': 'success'})
+
+
 class RemoveStaff(Resource):
     @staticmethod
     def post():
@@ -442,6 +465,7 @@ class ResetIngredientAmounts(Resource):
 
 api.add_resource(SignUp, '/signup')  # Admin
 api.add_resource(GetStaffList, '/staff_list')  # Admin
+api.add_resource(EditStaff, '/edit_staff')  # Admin
 api.add_resource(RemoveStaff, '/remove_staff')  # Admin
 api.add_resource(Login, '/login')  # All
 api.add_resource(DisplayTables, '/display_tables')  # Waiter, Manager
