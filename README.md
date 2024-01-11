@@ -15,7 +15,7 @@
     * **Request Body:**
         * `name`: The name of the staff member.
         * `role`: The role of the staff member (e.g., "waiter", "manager", "cook").
-        * `shift`: The shift of the staff member (e.g., "morning", "afternoon", "evening").
+        * `shift`: The shift of the staff member (e.g., "1", "2", "3").
         * `specialty` (optional): The specialty of the staff member (e.g., "Italian", "French", "Chinese").
     * **Response:**
         * `status`: "success" or "failure"
