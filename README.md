@@ -1,157 +1,174 @@
+**API Documentation**
+
 **Base URL:** http://localhost:8000
 
 **Authentication:**
 
-* All endpoints require authentication except for `/login` and `/display_menu`.
-* To authenticate, send a POST request to `/login` with the staff ID in the request body.
-* The response will contain a JSON object with a `token` field.
-* Include the `token` in the `Authorization` header of all subsequent requests.
+* All endpoints that require authentication will require a valid JWT token in the `Authorization` header.
+* To obtain a JWT token, you can use the `/login` endpoint.
 
-**Endpoints:**
+**Staff Management:**
 
-* **`/signup`**
+* **`/signup`**:
     * **Method:** POST
-    * **Access:** Admin
     * **Request Body:**
         * `name`: The name of the staff member.
-        * `role`: The role of the staff member (e.g., "waiter", "manager", "cook").
-        * `shift`: The shift of the staff member (e.g., "1", "2", "3").
-        * `specialty` (optional): The specialty of the staff member (e.g., "Italian", "French", "Chinese").
+        * `role`: The role of the staff member (e.g., "Waiter", "Manager", "Cook").
+        * `shift`: The shift of the staff member (e.g., "Morning", "Afternoon", "Evening").
+        * `specialty`: The specialty of the staff member (e.g., "Cooking", "Serving", "Cleaning").
     * **Response:**
         * `status`: "success" or "failure"
-        * `staffID`: The ID of the newly created staff member (if successful).
-* **`/staff_list`**
+        * `staffID`: The ID of the newly created staff member.
+* **`/staff_list`**:
     * **Method:** GET
-    * **Access:** Admin
     * **Response:**
-        * A list of all staff members in the system, including their ID, name, role, shift, and specialty.
-* **`/remove_staff`**
+        * A list of all staff members in the system.
+* **`/edit_staff`**:
     * **Method:** POST
-    * **Access:** Admin
+    * **Request Body:**
+        * `staffID`: The ID of the staff member to be edited.
+        * `newName`: The new name of the staff member.
+        * `newRole`: The new role of the staff member.
+        * `newShift`: The new shift of the staff member.
+        * `newSpecialty`: The new specialty of the staff member.
+    * **Response:**
+        * `status`: "success" or "failure"
+* **`/remove_staff`**:
+    * **Method:** POST
     * **Request Body:**
         * `staffID`: The ID of the staff member to be removed.
     * **Response:**
         * `status`: "success" or "failure"
-* **`/login`**
+
+**Login:**
+
+* **`/login`**:
     * **Method:** POST
-    * **Access:** All
     * **Request Body:**
         * `staffID`: The ID of the staff member.
     * **Response:**
         * `status`: "success" or "failure"
-        * `name`: The name of the staff member (if successful).
-        * `role`: The role of the staff member (if successful).
-        * `shift`: The shift of the staff member (if successful).
-        * `token`: The authentication token (if successful).
-* **`/display_tables`**
+        * `name`: The name of the staff member.
+        * `role`: The role of the staff member.
+        * `shift`: The shift of the staff member.
+        * `JWT Token`: A valid JWT token that can be used to authenticate subsequent requests.
+
+**Table Management:**
+
+* **`/display_tables`**:
     * **Method:** GET
-    * **Access:** Waiter, Manager
     * **Response:**
-        * A list of all dining tables in the system, including their number, status (0 for empty, 1 for occupied, 2 for reserved), and the name of the guest (if occupied).
-* **`/make_table`**
+        * A list of all tables in the system, along with their current status and the name of the guest sitting at the table (if any).
+* **`/make_table`**:
     * **Method:** POST
-    * **Access:** Waiter, Manager
     * **Request Body:**
-        * `tableNo`: The number of the table to be reserved.
-        * `guestName`: The name of the guest.
+        * `tableNo`: The number of the table to be created.
+        * `guestName`: The name of the guest who will be sitting at the table.
     * **Response:**
         * `status`: "success" or "failure"
-        * `tableStatus`: The new status of the table (1 for occupied).
-        * `guestName`: The name of the guest.
-* **`/remove_table`**
+        * `tableStatus`: The new status of the table.
+        * `guestName`: The name of the guest who will be sitting at the table.
+* **`/remove_table`**:
     * **Method:** POST
-    * **Access:** Waiter, Manager
     * **Request Body:**
         * `tableNo`: The number of the table to be removed.
     * **Response:**
         * `status`: "success" or "failure"
-        * `tableNo`: The number of the table that was removed.
-* **`/display_menu`**
+
+**Menu Management:**
+
+* **`/display_menu`**:
     * **Method:** GET
-    * **Access:** All
     * **Response:**
-        * A list of all menu items in the system, including their ID, name, price, stock status (0 for out of stock, 1 for in stock, 2 for low stock), and image link.
-* **`/add_item_to_order`**
+        * A list of all items on the menu, along with their prices, current stock levels, and an image link.
+
+**Order Management:**
+
+* **`/add_item_to_order`**:
     * **Method:** POST
-    * **Access:** Waiter, Manager
     * **Request Body:**
-        * A JSON array of order items, each with the following fields:
-            * `orderId`: The ID of the order.
-            * `itemId`: The ID of the menu item.
-            * `quantity`: The quantity of the menu item to be ordered.
-            * `staffId`: The ID of the staff member who is taking the order.
-            * `tableNo`: The number of the table where the order is being placed.
+        * An array of objects, each containing the following properties:
+            * `orderId`: The ID of the order to which the item is being added.
+            * `itemId`: The ID of the item being added to the order.
+            * `quantity`: The quantity of the item being added to the order.
+            * `staffId`: The ID of the staff member who is adding the item to the order.
+            * `tableNo`: The number of the table at which the order is being placed.
     * **Response:**
         * `status`: "success" or "failure"
-* **`/remove_order`**
+* **`/remove_order`**:
     * **Method:** POST
-    * **Access:** Waiter, Manager
     * **Request Body:**
         * `orderId`: The ID of the order to be removed.
     * **Response:**
         * `status`: "success" or "failure"
-* **`/display_record`**
+
+**Order History:**
+
+* **`/display_record`**:
     * **Method:** GET
-    * **Access:** Manager
     * **Response:**
-        * A list of all orders in the system, including their ID, the ID of the staff member who took the order, the shift of the staff member, the total amount of the order, and the date the order was placed.
-* **`/display_order_status`**
+        * A list of all orders that have been placed, along with the total amount of each order, the date the order was placed, and the ID of the staff member who took the order.
+
+**Order Status:**
+
+* **`/display_order_status`**:
     * **Method:** GET
-    * **Access:** All
     * **Response:**
-        * A list of all orders in the system, including their ID and status (0 for not served, 1 for served, 2 for paid, 3 for completed).
-* **`/set_order_status`**
+        * A list of all orders that have been placed, along with their current status.
+* **`/set_order_status`**:
     * **Method:** POST
-    * **Access:** All
     * **Request Body:**
-        * `orderID`: The ID of the order.
-        * `newStatus`: The new status of the order (0 for not served, 1 for served, 2 for paid, 3 for completed).
+        * `orderID`: The ID of the order whose status is being changed.
+        * `newStatus`: The new status of the order.
     * **Response:**
         * `status`: "success" or "failure"
-* **`/payment`**
+
+**Payment:**
+
+* **`/payment`**:
     * **Method:** POST
-    * **Access:** Waiter, Manager
     * **Request Body:**
-        * `orderID`: The ID of the order.
+        * `orderID`: The ID of the order for which payment is being made.
     * **Response:**
         * `status`: "success" or "failure"
-        * `paymentID`: The ID of the payment (if successful).
-        * `totalamount`: The total amount of the payment (if successful).
-* **`/display_ingredients`**
+        * `paymentID`: The ID of the payment.
+        * `totalamount`: The total amount of the payment.
+
+**Ingredient Management:**
+
+* **`/display_ingredients`**:
     * **Method:** GET
-    * **Access:** Cook
     * **Response:**
-        * A list of all ingredients in the system, including their ID, name, threshold, and amount.
-* **`/edit_ingredient`**
+        * A list of all ingredients in the system, along with their current amounts, threshold levels, and the item they belong to.
+* **`/add_ingredient`**:
     * **Method:** POST
-    * **Access:** Cook
+    * **Request Body:**
+        * `ingredientName`: The name of the ingredient to be added.
+        * `amount`: The amount of the ingredient to be added.
+        * `threshold`: The threshold level for the ingredient.
+        * `itemID`: The ID of the item that the ingredient belongs to.
+    * **Response:**
+        * `status`: "success" or "failure"
+        * `ingredientID`: The ID of the newly created ingredient.
+* **`/edit_ingredient`**:
+    * **Method:** POST
     * **Request Body:**
         * `ingredientID`: The ID of the ingredient to be edited.
         * `newName`: The new name of the ingredient.
         * `newAmount`: The new amount of the ingredient.
-        * `newThreshold`: The new threshold of the ingredient.
+        * `newThreshold`: The new threshold level for the ingredient.
     * **Response:**
         * `status`: "success" or "failure"
-* **`/add_ingredient`**
+* **`/remove_ingredient`**:
     * **Method:** POST
-    * **Access:** Cook
-    * **Request Body:**
-        * `ingredientName`: The name of the ingredient.
-        * `amount`: The amount of the ingredient.
-        * `threshold`: The threshold of the ingredient.
-        * `itemID`: The ID of the menu item that the ingredient belongs to.
-    * **Response:**
-        * `status`: "success" or "failure"
-        * `ingredientID`: The ID of the newly created ingredient (if successful).
-* **`/remove_ingredient`**
-    * **Method:** POST
-    * **Access:** Cook
     * **Request Body:**
         * `ingredientID`: The ID of the ingredient to be removed.
     * **Response:**
         * `status`: "success" or "failure"
-* **`/reset_ingredient_amounts`**
+
+**Reset Ingredient Amounts:**
+
+* **`/reset_ingredient_amounts`**:
     * **Method:** POST
-    * **Access:** Cook
     * **Response:**
-        * `status`: "success"
+        * `status`: "success" or "failure"
