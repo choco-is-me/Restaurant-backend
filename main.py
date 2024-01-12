@@ -135,8 +135,7 @@ class RemoveStaff(Resource):
     @staticmethod
     def post():
         data = request.get_json()
-        staff_id = data['staffID']  # Access the "staffID" key using a string key
-
+        staff_id = data['staffID']
         staff = Staff.query.filter_by(staffid=staff_id).first()
         if not staff:
             return jsonify({'status': 'failure'})
