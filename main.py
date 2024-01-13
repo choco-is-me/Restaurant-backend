@@ -27,7 +27,6 @@ class Menu(db.Model):
     name = db.Column(db.String)
     price = db.Column(db.Integer)
     instock = db.Column(db.Integer)
-    imagelink = db.Column(db.String)
 
 
 class Ingredients(db.Model):
@@ -216,7 +215,7 @@ class DisplayMenu(Resource):
         output = []
         for item in menu_items:
             output.append({'itemID': item.itemid, 'name': item.name, 'price': item.price,
-                           'inStock': item.instock, 'imagelink': item.imagelink})
+                           'inStock': item.instock})
         return jsonify(output)
 
 
