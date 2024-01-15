@@ -371,7 +371,7 @@ class DisplayIngredients(Resource):
         for ingredient in ingredients:
             output.append(
                 {'ingredientID': ingredient.ingredientid, 'name': ingredient.name,
-                 'threshold': ingredient.threshold, 'amount': ingredient.amount})
+                 'threshold': ingredient.threshold, 'amount': ingredient.amount, 'itemID': ingredient.itemid})
         return jsonify(output)
 
 
