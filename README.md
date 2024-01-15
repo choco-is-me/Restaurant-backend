@@ -282,6 +282,7 @@
         * `name`: The name of the ingredient.
         * `threshold`: The threshold quantity of the ingredient.
         * `amount`: The current quantity of the ingredient.
+        * `itemID`: The ID of the menu item that the ingredient belongs to.
 
 **17. Edit Ingredient (POST /edit_ingredient)**
 
