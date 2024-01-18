@@ -6,7 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 api = Api(app)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://chocoisme:choco123@localhost/chocoisme'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:admin@localhost/Restaurant'
 db = SQLAlchemy(app)
 CORS(app)
 
@@ -484,4 +484,4 @@ api.add_resource(RemoveIngredient, '/remove_ingredient')  # Cook
 api.add_resource(ResetIngredientAmounts, '/reset_ingredient_amounts')  # Cook
 
 if __name__ == '__main__':
-    app.run(debug=True, port=8000)
+    app.run(host='0.0.0.0', debug=True, port=8000)
