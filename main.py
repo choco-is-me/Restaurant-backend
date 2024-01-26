@@ -266,7 +266,7 @@ class AddItemToOrder(Resource):
                 db.session.add(order_detail)
                 db.session.commit()
             else:
-                order = Orders(orderid=order_id, guestid=guest_id, orderstatus=0,
+                order = Orders(orderid=order_id, guestid=guest_id, orderstatus=1,
                                date=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
                 db.session.add(order)
                 db.session.commit()
@@ -410,10 +410,6 @@ class EditIngredient(Resource):
 
         ingredient = Ingredients.query.filter_by(ingredientid=ingredient_id).first()
         item_id = ingredient.itemid
-
-        existing_ingredient = Ingredients.query.filter_by(name=new_name, itemid=item_id).first()
-        if existing_ingredient:
-            return jsonify({'status': 'failure', 'message': 'Ingredient already exists'})
 
         if not ingredient:
             return jsonify({'status': 'failure'})
