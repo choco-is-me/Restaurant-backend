@@ -1,350 +1,511 @@
-**API Documentation**
+## Restaurant Management System API Documentation
 
-**Base URL**: http://localhost:8000
+### Introduction
 
-**Authentication**:
+This API provides a RESTful interface for managing a restaurant. It allows users to perform various operations, such as managing staff, tables, menus, orders, and ingredients.
 
-* All endpoints are accessible without authentication, except for the `/signup` endpoint.
-* The `/signup` endpoint requires a `staffId` in the request body.
+### Prerequisites
 
-**Endpoints**:
+* Python 3.6 or higher
+* Flask
+* Flask-SQLAlchemy
+* Flask-RESTful
+* Flask-Cors
+* PostgreSQL
 
-**1. Sign Up (POST /signup)**
+### Installation
 
-**Request**:
+1. Clone the repository:
 
-* **Content-Type**: `application/json`
-* **Body**:
-    * `name`: The name of the staff member.
-    * `role`: The role of the staff member (e.g., "waiter", "manager", "cook").
-    * `shift`: The shift of the staff member (e.g., "morning", "afternoon", "night").
-    * `specialty`: The specialty of the staff member (e.g., "Italian cuisine", "French cuisine", "Chinese cuisine").
+    ```
+    git clone https://github.com/your-username/restaurant-management-system.git
+    ```
 
-**Response**:
+2. Install the required dependencies:
 
-* **Status Code**: 200 (OK)
-* **Content-Type**: `application/json`
-* **Body**:
-    * `status`: "success" or "failure"
-    * `staffID`: The ID of the newly created staff member
+    ```
+    pip install -r requirements.txt
+    ```
 
-**2. Get Staff List (GET /staff_list)**
+3. Create a PostgreSQL database and user:
 
-**Request**:
+    ```
+    # Create a database
+    createdb restaurant
 
-* **Content-Type**: `application/json`
+    # Create a user and grant permissions
+    createuser restaurant_user
+    GRANT ALL PRIVILEGES ON DATABASE restaurant TO restaurant_user;
+    ```
 
-**Response**:
+4. Update the `app.config` in `app.py` with your database connection details:
 
-* **Status Code**: 200 (OK)
-* **Content-Type**: `application/json`
-* **Body**:
-    * A list of staff members, each with the following information:
-        * `staffId`: The ID of the staff member.
-        * `name`: The name of the staff member.
-        * `role`: The role of the staff member.
-        * `shift`: The shift of the staff member.
-        * `specialty`: The specialty of the staff member.
+    ```
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://restaurant_user:password@localhost/restaurant'
+    ```
 
-**3. Edit Staff (POST /edit_staff)**
+### Usage
 
-**Request**:
+1. Start the development server:
 
-* **Content-Type**: `application/json`
-* **Body**:
-    * `staffID`: The ID of the staff member to be edited.
-    * `newName`: The new name of the staff member.
-    * `newRole`: The new role of the staff member.
-    * `newShift`: The new shift of the staff member.
-    * `newSpecialty`: The new specialty of the staff member.
+    ```
+    python app.py
+    ```
 
-**Response**:
+2. Open your browser and navigate to `http://localhost:8000/swagger/`. This will open the Swagger UI, where you can explore the API endpoints and their documentation.
 
-* **Status Code**: 200 (OK)
-* **Content-Type**: `application/json`
-* **Body**:
-    * `status`: "success" or "failure"
+### API Endpoints
 
-**4. Remove Staff (POST /remove_staff)**
+#### 1. Staff Management
 
-**Request**:
+* **POST /signup**
 
-* **Content-Type**: `application/json`
-* **Body**:
-    * `staffID`: The ID of the staff member to be removed.
+    **Description:** Create a new staff member.
 
-**Response**:
+    **Request Body:**
 
-* **Status Code**: 200 (OK)
-* **Content-Type**: `application/json`
-* **Body**:
-    * `status`: "success" or "failure"
+    ```
+    {
+        "name": "John Doe",
+        "role": "Waiter",
+        "shift": 1,
+        "specialty": "Italian Cuisine"
+    }
+    ```
 
-**5. Login (POST /login)**
+    **Response:**
 
-**Request**:
+    ```
+    {
+        "status": "success",
+        "staffID": 1
+    }
+    ```
 
-* **Content-Type**: `application/json`
-* **Body**:
-    * `staffID`: The ID of the staff member attempting to log in.
+* **GET /staff_list**
 
-**Response**:
+    **Description:** Get a list of all staff members.
 
-* **Status Code**: 200 (OK)
-* **Content-Type**: `application/json`
-* **Body**:
-    * `status`: "success" or "failure"
-    * `name`: The name of the staff member who logged in.
-    * `role`: The role of the staff member who logged in.
-    * `shift`: The shift of the staff member who logged in.
+    **Response:**
 
-**6. Display Tables (GET /display_tables)**
+    ```
+    [
+        {
+            "staffId": 1,
+            "name": "John Doe",
+            "role": "Waiter",
+            "shift": 1,
+            "specialty": "Italian Cuisine"
+        },
+        ...
+    ]
+    ```
 
-**Request**:
+* **POST /edit_staff**
 
-* **Content-Type**: `application/json`
+    **Description:** Edit an existing staff member.
 
-**Response**:
+    **Request Body:**
 
-* **Status Code**: 200 (OK)
-* **Content-Type**: `application/json`
-* **Body**:
-    * A list of tables, each with the following information:
-        * `tableNo`: The number of the table.
-        * `tableStatus`: The status of the table (e.g., "available", "occupied", "reserved").
-        * `guestName`: The name of the guest who is currently occupying the table (if any).
+    ```
+    {
+        "staffID": 1,
+        "newName": "Jane Doe",
+        "newRole": "Manager",
+        "newShift": 2,
+        "newSpecialty": "French Cuisine"
+    }
+    ```
 
-**7. Make Table (POST /make_table)**
+    **Response:**
 
-**Request**:
+    ```
+    {
+        "status": "success"
+    }
+    ```
 
-* **Content-Type**: `application/json`
-* **Body**:
-    * `tableNo`: The number of the table to be made.
-    * `guestName`: The name of the guest who will be occupying the table.
+* **POST /remove_staff**
 
-**Response**:
+    **Description:** Remove an existing staff member.
 
-* **Status Code**: 200 (OK)
-* **Content-Type**: `application/json`
-* **Body**:
-    * `status`: "success" or "failure"
-    * `tableStatus`: The new status of the table.
-    * `guestName`: The name of the guest who is now occupying the table.
+    **Request Body:**
 
-**8. Remove Table (POST /remove_table)**
+    ```
+    {
+        "staffID": 1
+    }
+    ```
 
-**Request**:
+    **Response:**
 
-* **Content-Type**: `application/json`
-* **Body**:
-    * `tableNo`: The number of the table to be removed.
+    ```
+    {
+        "status": "success"
+    }
+    ```
 
-**Response**:
+#### 2. Login
 
-* **Status Code**: 200 (OK)
-* **Content-Type**: `application/json`
-* **Body**:
-    * `status`: "success" or "failure"
-    * `tableNo`: The number of the table that was removed.
+* **POST /login**
 
-**9. Display Menu (GET /display_menu)**
+    **Description:** Login a staff member.
 
-**Request**:
+    **Request Body:**
 
-* **Content-Type**: `application/json`
+    ```
+    {
+        "staffID": 1
+    }
+    ```
 
-**Response**:
+    **Response:**
 
-* **Status Code**: 200 (OK)
-* **Content-Type**: `application/json`
-* **Body**:
-    * A list of menu items, each with the following information:
-        * `itemID`: The ID of the menu item.
-        * `name`: The name of the menu item.
-        * `price`: The price of the menu item.
-        * `inStock`: The availability status of the menu item (e.g., "in stock", "out of stock").
+    ```
+    {
+        "status": "success",
+        "name": "John Doe",
+        "role": "Waiter",
+        "shift": 1
+    }
+    ```
 
-**10. Add Item to Order (POST /add_item_to_order)**
+#### 3. Table Management
 
-**Request**:
+* **GET /display_tables**
 
-* **Content-Type**: `application/json`
-* **Body**:
-    * An array of objects, each representing an item to be added to an order. Each object should have the following properties:
-        * `orderId`: The ID of the order to which the item is being added.
-        * `itemId`: The ID of the menu item being added.
-        * `quantity`: The quantity of the menu item being added.
-        * `staffId`: The ID of the staff member who is adding the item to the order.
-        * `tableNo`: The number of the table where the order is being placed.
+    **Description:** Get a list of all tables and their status.
 
-**Response**:
+    **Response:**
 
-* **Status Code**: 200 (OK)
-* **Content-Type**: `application/json`
-* **Body**:
-    * `status`: "success" or "failure"
+    ```
+    [
+        {
+            "tableNo": 1,
+            "tableStatus": 1,
+            "guestName": "John Smith"
+        },
+        ...
+    ]
+    ```
 
-**11. Remove Order (POST /remove_order)**
+* **POST /make_table**
 
-**Request**:
+    **Description:** Create a new table.
 
-* **Content-Type**: `application/json`
-* **Body**:
-    * `orderId`: The ID of the order to be removed.
+    **Request Body:**
 
-**Response**:
+    ```
+    {
+        "tableNo": 1,
+        "guestName": "John Smith"
+    }
+    ```
 
-* **Status Code**: 200 (OK)
-* **Content-Type**: `application/json`
-* **Body**:
-    * `status`: "success" or "failure"
+    **Response:**
 
-**12. Display Record (GET /display_record)**
+    ```
+    {
+        "status": "success",
+        "tableStatus": 1,
+        "guestName": "John Smith"
+    }
+    ```
 
-**Request**:
+* **POST /remove_table**
 
-* **Content-Type**: `application/json`
+    **Description:** Remove an existing table.
 
-**Response**:
+    **Request Body:**
 
-* **Status Code**: 200 (OK)
-* **Content-Type**: `application/json`
-* **Body**:
-    * A list of orders, each with the following information:
-        * `orderId`: The ID of the order.
-        * `staffId`: The ID of the staff member who took the order.
-        * `shift`: The shift of the staff member who took the order.
-        * `totalAmount`: The total amount of the order.
-        * `date`: The date and time when the order was placed.
+    ```
+    {
+        "tableNo": 1
+    }
+    ```
 
-**13. Display Order Status (GET /display_order_status)**
+    **Response:**
 
-**Request**:
+    ```
+    {
+        "status": "success"
+    }
+    ```
 
-* **Content-Type**: `application/json`
+#### 4. Menu Management
 
-**Response**:
+* **GET /display_menu**
 
-* **Status Code**: 200 (OK)
-* **Content-Type**: `application/json`
-* **Body**:
-    * A list of orders, each with the following information:
-        * `orderID`: The ID of the order.
-        * `orderStatus`: The status of the order (e.g., "new", "in progress", "completed").
+    **Description:** Get a list of all menu items.
 
-**14. Set Order Status (POST /set_order_status)**
+    **Response:**
 
-**Request**:
+    ```
+    [
+        {
+            "itemID": 1,
+            "name": "Pizza",
+            "price": 10,
+            "inStock": 1
+        },
+        ...
+    ]
+    ```
 
-* **Content-Type**: `application/json`
-* **Body**:
-    * `orderID`: The ID of the order whose status is being updated.
-    * `newStatus`: The new status of the order.
+#### 5. Order Management
 
-**Response**:
+* **POST /add_item_to_order**
 
-* **Status Code**: 200 (OK)
-* **Content-Type**: `application/json`
-* **Body**:
-    * `status`: "success" or "failure"
+    **Description:** Add an item to an existing order.
 
-**15. Make Payment (POST /payment)**
+    **Request Body:**
 
-**Request**:
+    ```
+    [
+        {
+            "orderId": 1,
+            "itemId": 1,
+            "quantity": 2,
+            "staffId": 1,
+            "tableNo": 1
+        }
+    ]
+    ```
 
-* **Content-Type**: `application/json`
-* **Body**:
-    * `orderID`: The ID of the order for which payment is being made.
+    **Response:**
 
-**Response**:
+    ```
+    {
+        "status": "success"
+    }
+    ```
 
-* **Status Code**: 200 (OK)
-* **Content-Type**: `application/json`
-* **Body**:
-    * `status`: "success" or "failure"
-    * `paymentID`: The ID of the payment.
-    * `totalamount`: The total amount of the payment.
+* **POST /remove_order**
 
-**16. Display Ingredients (GET /display_ingredients)**
+    **Description:** Remove an existing order.
 
-**Request**:
+    **Request Body:**
 
-* **Content-Type**: `application/json`
+    ```
+    {
+        "orderId": 1
+    }
+    ```
 
-**Response**:
+    **Response:**
 
-* **Status Code**: 200 (OK)
-* **Content-Type**: `application/json`
-* **Body**:
-    * A list of ingredients, each with the following information:
-        * `ingredientID`: The ID of the ingredient.
-        * `name`: The name of the ingredient.
-        * `threshold`: The threshold quantity of the ingredient.
-        * `amount`: The current quantity of the ingredient.
-        * `itemID`: The ID of the menu item that the ingredient belongs to.
+    ```
+    {
+        "status": "success"
+    }
+    ```
 
-**17. Edit Ingredient (POST /edit_ingredient)**
+#### 6. Record Management
 
-**Request**:
+* **GET /display_record**
 
-* **Content-Type**: `application/json`
-* **Body**:
-    * `ingredientID`: The ID of the ingredient to be edited.
-    * `newName`: The new name of the ingredient.
-    * `newAmount`: The new quantity of the ingredient.
-    * `newThreshold`: The new threshold quantity of the ingredient.
+    **Description:** Get a list of all orders and their details.
 
-**Response**:
+    **Response:**
 
-* **Status Code**: 200 (OK)
-* **Content-Type**: `application/json`
-* **Body**:
-    * `status`: "success" or "failure"
+    ```
+    [
+        {
+            "orderId": 1,
+            "staffId": 1,
+            "shift": 1,
+            "totalAmount": 20,
+            "date": "2023-01-29T23:10:33"
+        },
+        ...
+    ]
+    ```
 
-**18. Add Ingredient (POST /add_ingredient)**
+#### 7. Order Status Management
 
-**Request**:
+* **GET /display_order_status**
 
-* **Content-Type**: `application/json`
-* **Body**:
-    * `ingredientName`: The name of the ingredient to be added.
-    * `amount`: The quantity of the ingredient to be added.
-    * `threshold`: The threshold quantity of the ingredient.
-    * `itemID`: The ID of the menu item that the ingredient belongs to.
+    **Description:** Get a list of all orders and their status.
 
-**Response**:
+    **Response:**
 
-* **Status Code**: 200 (OK)
-* **Content-Type**: `application/json`
-* **Body**:
-    * `status`: "success" or "failure"
-    * `ingredientID`: The ID of the newly created ingredient.
+    ```
+    [
+        {
+            "orderID": 1,
+            "orderStatus": 1
+        },
+        ...
+    ]
+    ```
 
-**19. Remove Ingredient (POST /remove_ingredient)**
+* **POST /set_order_status**
 
-**Request**:
+    **Description:** Set the status of an existing order.
 
-* **Content-Type**: `application/json`
-* **Body**:
-    * `ingredientID`: The ID of the ingredient to be removed.
+    **Request Body:**
 
-**Response**:
+    ```
+    {
+        "orderID": 1,
+        "newStatus": 2
+    }
+    ```
 
-* **Status Code**: 200 (OK)
-* **Content-Type**: `application/json`
-* **Body**:
-    * `status`: "success" or "failure"
+    **Response:**
 
-**20. Reset Ingredient Amounts (POST /reset_ingredient_amounts)**
+    ```
+    {
+        "status": "success"
+    }
+    ```
 
-**Request**:
+#### 8. Order Details Management
 
-* **Content-Type**: `application/json`
+* **POST /get_order_details**
 
-**Response**:
+    **Description:** Get the details of an existing order.
 
-* **Status Code**: 200 (OK)
-* **Content-Type**: `application/json`
-* **Body**:
-    * `status`: "success" or "failure"
+    **Request Body:**
+
+    ```
+    {
+        "orderID": 1
+    }
+    ```
+
+    **Response:**
+
+    ```
+    [
+        {
+            "itemName": "Pizza",
+            "quantity": 2,
+            "totalamount": 20
+        }
+    ]
+    ```
+
+#### 9. Payment Management
+
+* **POST /payment**
+
+    **Description:** Make a payment for an existing order.
+
+    **Request Body:**
+
+    ```
+    {
+        "orderID": 1
+    }
+    ```
+
+    **Response:**
+
+    ```
+    {
+        "status": "success",
+        "paymentID": 1,
+        "totalamount": 20
+    }
+    ```
+
+#### 10. Ingredient Management
+
+* **GET /display_ingredients**
+
+    **Description:** Get a list of all ingredients.
+
+    **Response:**
+
+    ```
+    [
+        {
+            "ingredientID": 1,
+            "name": "Flour",
+            "threshold": 10,
+            "amount": 20,
+            "itemID": 1
+        },
+        ...
+    ]
+    ```
+
+* **POST /add_ingredient**
+
+    **Description:** Add a new ingredient.
+
+    **Request Body:**
+
+    ```
+    {
+        "ingredientName": "Sugar",
+        "amount": 50,
+        "threshold": 20,
+        "itemID": 1
+    }
+    ```
+
+    **Response:**
+
+    ```
+    {
+        "status": "success",
+        "ingredientID": 6
+    }
+    ```
+
+* **POST /edit_ingredient**
+
+    **Description:** Edit an existing ingredient.
+
+    **Request Body:**
+
+    ```
+    {
+        "ingredientID": 1,
+        "newName": "Salt",
+        "newAmount": 30,
+        "newThreshold": 15
+    }
+    ```
+
+    **Response:**
+
+    ```
+    {
+        "status": "success"
+    }
+    ```
+
+* **POST /remove_ingredient**
+
+    **Description:** Remove an existing ingredient.
+
+    **Request Body:**
+
+    ```
+    {
+        "ingredientID": 1
+    }
+    ```
+
+    **Response:**
+
+    ```
+    {
+        "status": "success"
+    }
+    ```
+
+* **POST /reset_ingredient_amounts**
+
+    **Description:** Reset the amounts of all ingredients to 20.
+
+    **Response:**
+
+    ```
+    {
+        "status": "success"
+    }
+    ```
