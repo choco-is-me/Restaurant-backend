@@ -310,6 +310,8 @@ class DisplayRecord(Resource):
             order_detail = OrderDetails.query.filter_by(orderid=order.orderid).first()
             staff = Staff.query.filter_by(staffid=order_detail.staffid).first()
             payment = Payment.query.filter_by(orderid=order.orderid).first()
+            if not order or not order_detail or not staff or not payment:
+                return jsonify({'error': 'Missing data'}), 400
             output.append(
                 {'orderId': order.orderid, 'staffId': staff.staffid, 'shift': staff.shift,
                  'totalAmount': payment.totalamount, 'date': order.date.isoformat()}
@@ -339,6 +341,23 @@ class SetOrderStatus(Resource):
         order.orderstatus = new_status
         db.session.commit()
         return jsonify({'status': 'success'})
+
+
+class GetOrderDetails(Resource):
+    @staticmethod
+    def post():
+        data = request.get_json()  # get data from POST request
+        order_id = data['orderID']
+
+        order_details = OrderDetails.query.filter_by(orderid=order_id).all()
+        output = []
+        for order_detail in order_details:
+            item = Menu.query.filter_by(itemid=order_detail.itemid).first()
+            output.append(
+                {'itemName': item.name, 'quantity': order_detail.quantity,
+                 'totalamount': order_detail.totalamount}
+            )
+        return jsonify(output)
 
 
 class MakePayment(Resource):
@@ -472,6 +491,7 @@ api.add_resource(RemoveOrder, '/remove_order')  # Waiter, Manager
 api.add_resource(DisplayRecord, '/display_record')  # Manager
 api.add_resource(DisplayOrderStatus, '/display_order_status')  # All
 api.add_resource(SetOrderStatus, '/set_order_status')  # All
+api.add_resource(GetOrderDetails, '/get_order_details')  # Waiter, Manager
 api.add_resource(MakePayment, '/payment')  # Waiter, Manager
 api.add_resource(DisplayIngredients, '/display_ingredients')  # Cook
 api.add_resource(EditIngredient, '/edit_ingredient')  # Cook
