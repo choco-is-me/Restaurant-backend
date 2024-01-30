@@ -428,7 +428,6 @@ class EditIngredient(Resource):
         new_threshold = data['newThreshold']
 
         ingredient = Ingredients.query.filter_by(ingredientid=ingredient_id).first()
-        item_id = ingredient.itemid
 
         if not ingredient:
             return jsonify({'status': 'failure'})
