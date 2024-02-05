@@ -311,7 +311,7 @@ class DisplayRecord(Resource):
             staff = Staff.query.filter_by(staffid=order_detail.staffid).first()
             payment = Payment.query.filter_by(orderid=order.orderid).first()
             if not order or not order_detail or not staff or not payment:
-                return jsonify({'error': 'Missing data'}), 400
+                return {'error': 'Missing data'}, 400
             output.append(
                 {'orderId': order.orderid, 'staffId': staff.staffid, 'shift': staff.shift,
                  'totalAmount': payment.totalamount, 'date': order.date.isoformat()}
