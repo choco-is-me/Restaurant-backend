@@ -308,15 +308,21 @@ class DisplayRecord(Resource):
         output = []
         for order in orders:
             order_detail = OrderDetails.query.filter_by(orderid=order.orderid).first()
-            staff = Staff.query.filter_by(staffid=order_detail.staffid).first()
+            staff = Staff.query.filter_by(staffid=order_detail.staffid).first() if order_detail else None
             payment = Payment.query.filter_by(orderid=order.orderid).first()
-            if not order or not order_detail or not staff:
+            if not order or not order_detail:
                 continue  # Skip this order if any data is missing
             total_amount = payment.totalamount if payment else 0
-            output.append(
-                {'orderId': order.orderid, 'staffId': staff.staffid, 'shift': staff.shift,
-                 'totalAmount': total_amount, 'date': order.date.isoformat()}
-            )
+            if staff:
+                output.append(
+                    {'orderId': order.orderid, 'staffId': staff.staffid, 'shift': staff.shift,
+                     'totalAmount': total_amount, 'date': order.date.isoformat()}
+                )
+            else:
+                output.append(
+                    {'orderId': order.orderid, 'staffId': 'staff no longer exist', 'shift': 'N/A',
+                     'totalAmount': total_amount, 'date': order.date.isoformat()}
+                )
         return jsonify(output)
 
 
