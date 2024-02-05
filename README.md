@@ -27,21 +27,14 @@ This API provides a RESTful interface for managing a restaurant. It allows users
     pip install -r requirements.txt
     ```
 
-3. Create a PostgreSQL database and user:
+3. Import PostgreSQL database and user:
 
-    ```
-    # Create a database
-    createdb restaurant
-
-    # Create a user and grant permissions
-    createuser restaurant_user
-    GRANT ALL PRIVILEGES ON DATABASE restaurant TO restaurant_user;
-    ```
+Server password: admin
 
 4. Update the `app.config` in `app.py` with your database connection details:
 
     ```
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://restaurant_user:password@localhost/restaurant'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:admin@localhost/Restaurant'
     ```
 
 ### Usage
@@ -52,7 +45,15 @@ This API provides a RESTful interface for managing a restaurant. It allows users
     python app.py
     ```
 
-2. Open your browser and navigate to `http://localhost:8000/swagger/`. This will open the Swagger UI, where you can explore the API endpoints and their documentation.
+2. Open your browser and navigate to `http://yourIP/swagger/`. This will open the Swagger UI, where you can explore the API endpoints and their documentation.
+
+3. In Front-end side:
+
+Navigate to App.jsx and modify this line: Axios.defaults.baseURL = "your backend IP";
+
+4. Run ```npm install``` first to install all the dependency. Then run ```npm run web``` to run the web app.
+
+5. Voilà! Enjoy tweaking the Restaurant System web app with ease.
 
 ### API Endpoints
 
